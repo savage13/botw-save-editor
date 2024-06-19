@@ -1,0 +1,28 @@
+{
+  "titleId": "01cb2f363c420000",
+  "name": "BotwSaveEditor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "",
+  "scripts": {
+    "build": "esbuild --bundle --sourcemap --sources-content=false --target=es2022 --format=esm src/main.ts --outfile=romfs/main.js --loader:.jpg=file --loader:.json=file --loader:.sav=file --watch",
+      "compile": "npx tsc --noEmit",
+      "nro": "nxjs-nro",
+    "nsp": "nxjs-nsp"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@nx.js/nro": "^0.0.46",
+    "@nx.js/nsp": "^0.0.46",
+    "esbuild": "^0.17.19",
+    "nxjs-runtime": "^0.0.46"
+  },
+  "author": {
+    "name": "savage13",
+    "email": "savage13@gmail.com"
+  },
+  "dependencies": {
+    "@nx.js/constants": "^0.1.2",
+    "@types/node": "^20.14.2"
+  }
+}
