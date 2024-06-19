@@ -1,7 +1,7 @@
 # botw-save-editor
 BotW Save Editor
 
-# Download
+### Download
 
 You can get a release from the Releases page
 
