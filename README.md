@@ -3,7 +3,7 @@ BotW Save Editor
 
 ### Download
 
-You can get a runnable [program](https://github.com/savage13/botw-save-editor/releases/download/v0.1.0/BotwSaveEditor.nro) (v0.1.0) or from [Releases](https://github.com/savage13/botw-save-editor/releases)
+You can download [BotwSaveEditor.nro](https://github.com/savage13/botw-save-editor/releases/download/v0.1.0/BotwSaveEditor.nro) (v0.1.0) directly or from [Releases](https://github.com/savage13/botw-save-editor/releases)
 
 ### Building
 
