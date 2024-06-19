@@ -888,6 +888,9 @@ class State {
     dv.addEventListener('cancel', (_ev: CustomEvent) => {
       this.pop_view()
     })
+    dv.addEventListener('write', (_ev: CustomEvent) => {
+      this.write_active_edits()
+    })
     dv.addEventListener('change', (ev: CustomEvent) => {
       const key = ev.detail.key
       const value = ev.detail.value
@@ -1060,7 +1063,7 @@ class State {
     //this.ctx.stroke()
     this.ctx.fillText(msg, 50, 720 - 35)
     this.ctx.restore()
-    console.log("message", msg)
+    //console.log("message", msg)
     this.blit()
   }
 

@@ -37,6 +37,7 @@ export class Message extends View {
 
     fillRect(ctx, x, y, w, 10, this.fg_color)
 
+    ctx.fillStyle = this.fg_color
     if (this.data.title) {
       this.set_font(32)
       ctx.textAlign = "left";
@@ -58,8 +59,6 @@ export class Message extends View {
       let y1 = y + h - 10
       ctx.fillText("A: Ok   B:  Cancel ", x1, y1)
     }
-
-
     ctx.restore()
   }
 }
