@@ -6,8 +6,9 @@
   "description": "",
   "scripts": {
     "build": "esbuild --bundle --sourcemap --sources-content=false --target=es2022 --format=esm src/main.ts --outfile=romfs/main.js --loader:.jpg=file --loader:.json=file --loader:.sav=file --watch",
-      "compile": "npx tsc --noEmit",
-      "nro": "nxjs-nro",
+     "compile": "npx tsc --noEmit",
+     "nro": "esbuild --bundle --sourcemap --sources-content=false --target=es2022 --format=esm src/main.ts --outfile=romfs/main.js --loader:.jpg=file --loader:.json=file --loader:.sav=file && nxjs-nro",
+    "nro.old": "nxjs-nro",
     "nsp": "nxjs-nsp"
   },
   "license": "MIT",

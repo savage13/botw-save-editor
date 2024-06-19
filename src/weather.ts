@@ -90,6 +90,9 @@ export class WeatherView extends View {
     this.dispatchEvent(new CustomEvent("cancel"))
   }
   key_a() {
+    if (this.selected[COL] == 0)
+      return
+
     const x = 1280 * 0.33
     const y = 720 * 0.33
     const w = 1280 * 0.33
