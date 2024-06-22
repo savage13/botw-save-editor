@@ -350,7 +350,7 @@ export class InventoryView extends View {
       }
       //console.log("VAL", this.edit_value())
     } else {
-      console.error("Unhandled edit type", this.edit_type)
+
     }
     return true
   }

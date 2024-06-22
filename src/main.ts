@@ -57,28 +57,6 @@ const CaptionKeys = {
 //let MapImage = new Image()
 //MapImage.src = MapUrl
 
-function sum(vals: number[]): number {
-  let xsum = 0;
-  for (const val of vals)
-    xsum += val
-  return xsum
-}
-
-
-
-
-
-/*
-function f32_to_u32(value: number) {
-  const buf = new ArrayBuffer(4);
-  let f32 = new Float32Array(buf)
-  let u32 = new Uint32Array(buf)
-  f32[0] = value
-  return u32[0]
-}
-*/
-
-
 // Cook Effect 0  [0] - EffectType
 // Cook Effect 0  [1] - EffectLevel
 // Cook Effect 1  [0] - SellingPrice
@@ -159,24 +137,40 @@ async function read_caption_plus(save: any): Promise<any> {
     return vals[kind]
   }
   save.get = (key: string) => {
-    if (key.startsWith("PouchItem"))
+    if (key.startsWith("PouchItem")) {
+      if (!save.pouch_items)
+        return undefined
       return save.pouch_item(key)
-    if (key in CaptionKeys)
+    }
+    if (key in CaptionKeys) {
+      if (!save.caption)
+        return undefined
       return save.caption.get(key)
+    }
+    if (!save.data)
+      return undefined
     return save.data.get(key)
   }
   save.type = (key: string) => {
-    if (key.startsWith("PouchItem"))
+    if (key.startsWith("PouchItem")) {
+      if (!save.pouch_items)
+        return undefined
       return save.pouch_item_type(key)
-    if (key in CaptionKeys)
+    }
+    if (key in CaptionKeys) {
+      if (!save.caption)
+        return undefined
       return save.caption.type(key)
+    }
+    if (!save.data)
+      return undefined
     return save.data.type(key)
   }
   const img_data = await read_file(img_file)
   let imgsrc = URL.createObjectURL(new Blob([img_data], { type: 'image/jpeg' }));
   save.screenshot = await loadImage(imgsrc)
-  if (!ON_SWITCH && SLEEP)
-    await sleep(100)
+  //if (!ON_SWITCH && SLEEP)
+  //  await sleep(100)
   //console.log("READ CAPTION PLUS DONE", save.name)
 }
 
@@ -185,10 +179,11 @@ async function read_game_data(slot: any): Promise<any> {
   let game_data = new Savefile()
   let game_data_file = slot.files.find((file: string) => file.endsWith("game_data.sav"))
   let buf = await read_file(game_data_file)
+  if (buf === undefined)
+    console.error("Error reading in " + game_data_file)
   game_data.read(buf)
-  if (!ON_SWITCH && SLEEP)
-    await sleep(1000)
-  //console.log("READ CAPTION PLUS DONE", slot.name)
+  //if (!ON_SWITCH && SLEEP)
+  //  await sleep(3000)
 
   return game_data;
 }
@@ -623,9 +618,10 @@ class State {
     return save.type(key)
   }
 
-  active_save() {
-    const save_selected = this.index[this.FILE];
-    return this.saves[save_selected];
+  active_save(): any {
+    if (this.current_save_index < 0 || this.current_save_index >= this.saves.length)
+      return undefined
+    return this.saves[this.current_save_index];
   }
   write_active_edits() {
 
@@ -707,21 +703,16 @@ class State {
     await new Promise(async (resolve, _reject) => {
       //console.log("CAPTION DATA LOAD");
       const new_saves = await load_save_file_data_filter(BOTW, nickname);
-      this.saves.splice(0, this.saves.length, ...new_saves)
-      this.update();
-      //console.log("CAPTION DATA READ");
-      for (const save of this.saves) {
+      for (const save of new_saves) {
         await read_caption_plus(save);
       }
-      let normal = this.saves.filter((s: any) => !s.hard)
-      let hard = this.saves.filter((s: any) => s.hard)
+      let normal = new_saves.filter((s: any) => !s.hard)
+      let hard = new_saves.filter((s: any) => s.hard)
       this.saves.splice(0, this.saves.length, ...normal)
       this.saves.push(...hard)
       this.update();
-      //console.log("CAPTION DATA READ DONE");
       resolve(true)
     }).then(async () => {
-      //console.log("CAPTION DATA DONE", this.saves);
       this.update();
     });
   }
@@ -866,9 +857,8 @@ class State {
   }
 
   show_pouch_items() {
-    const save = this.active_save()
     const v = new InventoryView(this, new Rect(20, 40, 1280 - 40, 720 - 50), {
-      save, items: this.details["Pouch Items"]
+      save: this.active_save(), items: this.details["Pouch Items"]
     })
     v.addEventListener('cancel', () => { this.pop_view() })
     v.addEventListener('revert', () => { this.update_pouch_items(this.active_save()) })
@@ -915,9 +905,12 @@ class State {
     if (this.current_save_index != save_index) {
       this.current_save_index = save_index
       this.active_edits = {}
+      if (save.data) {
+        this.update_pouch_items(save)
+      }
     }
     const cv = new CategoryView(this, new Rect(40, 40, 1280 - 40, 720 - 50), {
-      items: this.categories
+      items: this.categories, save
     })
     cv.addEventListener('cancel', (_ev: CustomEvent) => {
       this.pop_view()
@@ -928,23 +921,45 @@ class State {
     this.push_view(cv)
 
     if (!save.data) {
-      if (save.load === undefined) {
-        //console.log("LOAD SAVE FILE");
-        await new Promise(async (resolve, _reject) => {
-          if (save.load === false || save.load === true)
-            return
-          //console.log("LOAD SAVE FILE ...");
-          save.load = false;
-          save.data = await read_game_data(save);
-          save.load = true;
-          //console.log("LOAD SAVE FILE DONE");
-          this.update_pouch_items(save)
-          resolve(1);
-        })
-        //console.log("CALL UPDATE");
+      save.status = "Game data requested to read"
+      setTimeout(() => { this.update() }, 1)
+
+      await new Promise(async (resolve, reject) => {
+        save.status = "Game data reading ..."
+        setTimeout(() => { this.update() }, 1)
+
+        let game_data = new Savefile()
+        let game_data_file = save.files.find((file: string) => file.endsWith("game_data.sav"))
+        save.status = "Reading game data ..."
+        let buf = await read_file(game_data_file)
+        if (!ON_SWITCH && SLEEP)
+          await sleep(2000)
+        if (buf === undefined || buf === null) {
+          return reject(`Error reading in ${save.name} ${save.path}`)
+        }
+        save.status = "Parsing game data ..."
+        const ret = game_data.read(buf)
+        if (!ret.status)
+          return reject(ret.msg)
+        //if (!ON_SWITCH && SLEEP)
+        //  await sleep(2000)
+
+        save.data = game_data
+        //save.data = await read_game_data(save);
+
+        save.status = "Game data read inventory"
+        setTimeout(() => { this.update() }, 1)
+        this.update_pouch_items(save)
+        save.status = "Game data inventory read"
+        resolve(1);
+      }).then(() => {
+        save.status = ""
         this.update();
-        return;
-      }
+      }).catch(error => {
+        //console.error(error)
+        save.status = error.toString()
+        this.update()
+      })
     }
   }
 

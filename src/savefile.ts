@@ -2,7 +2,7 @@
 
 import { PorchItem } from './Porch'
 import { arrays_to_porch, porch_to_arrays } from './Porch'
-export { PorchName, PorchItem, ModVals, Modifier } from './Porch'
+export { PorchName, PorchItem, ModVals, Modifier, PorchType } from './Porch'
 
 import { parse_var } from './parse'
 
@@ -98,6 +98,33 @@ export function load_types_from_data(data: any) {
   }
 }
 
+const VERSIONS: { [key: number]: string } = {
+  0x24E2: '1.0.0',
+  0x24EE: '1.1.0',
+  0x2588: '1.2.0',
+  0x29C0: '1.3.0',
+  0x2A46: '1.3.1',
+  0x3EF8: '1.3.3',
+  0x3EF9: '1.3.4',
+  //0x471A: '1.4.0',
+  0x471A: '1.4.1',
+  0x471B: '1.5.0',
+  0x471E: '1.6.0',
+}
+const SIZES: { [key: number]: number } = {
+  0x24E2: 896976,
+  0x24EE: 897160,
+  0x2588: 897112,
+  0x29C0: 907824,
+  0x2A46: 907824,
+  0x3EF8: 1020648,
+  0x3EF9: 1020648,
+  //0x471A: '1.4.0',
+  0x471A: 1027208,
+  0x471B: 1027208,
+  0x471E: 1027216,
+}
+
 export class Savefile {
   version: number;
   marker: number;
@@ -123,7 +150,15 @@ export class Savefile {
     return this.buf
   }
 
-  read(buf: ArrayBuffer) {
+  clone(): Savefile {
+    const s = new Savefile()
+    let buf = new ArrayBuffer(this.size)
+    new Uint8Array(buf).set(new Uint8Array(this.buf))
+    s.read(buf)
+    return s
+  }
+
+  read(buf: ArrayBuffer): any {
     this.size = buf.byteLength;
     this.buf = buf;
     this.dv = new DataView(this.buf);
@@ -139,6 +174,16 @@ export class Savefile {
 
     this.version = this.dv.getUint32(0, this.order);
     this.marker = this.dv.getUint32(4, this.order);
+    if (!(this.version in VERSIONS))
+      return { status: false, msg: `Unknown version ${this.version}` }
+    if (this.marker != 0xffffffff)
+      return { status: false, msg: `Marker not 0xffffffff ${this.marker}` }
+    if (this.size > 3000 && SIZES[this.version] != this.size)
+      return {
+        status: false,
+        msg: `Unknown file size ${this.size} ${VERSIONS[this.version]} ${SIZES[this.version]}`
+      }
+
 
     // Read in offsets
     let off = 12;
@@ -152,7 +197,7 @@ export class Savefile {
       }
       off += 8
     }
-    return true;
+    return { status: true, msg: "" };
   }
 
   type(key: string): string {
@@ -189,6 +234,16 @@ export class Savefile {
     new Uint8Array(buffer).set(new Uint8Array(this._backup))
     this.buf = buffer;
     this.dv = new DataView(this.buf);
+  }
+
+  add(key: string, value: number): boolean {
+    const kind = this.type(key)
+    if (kind !== 's32' && kind != 'f32')
+      return false
+    if (!isFloat(value) || (kind == 's32' && !isInt(value)))
+      return false
+    let current_value = this.get(key)
+    return this.set(key, current_value + value)
   }
 
   set(key: string, value: any): boolean {
@@ -667,7 +722,7 @@ export function save_diff(a: Savefile, b: Savefile) {
   let bv = new Uint32Array(b.buf)
   for (let i = 0; i < a.size / 4; i++) {
     if (av[i] != bv[i]) {
-      console.log(i, av[i], bv[i])
+      //console.log(i, av[i], bv[i])
     }
   }
 }

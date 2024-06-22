@@ -98,6 +98,11 @@ export class DetailsView extends View {
     ctx.textBaseline = 'top';
     this.set_font(24)
 
+    if (!this.data.save || !this.data.save.data) {
+      ctx.fillText("Loading save data...", 1280 / 2, 720 / 2)
+      return
+    }
+
     const w_name = 350
 
     const start = this.item_offset()
@@ -154,14 +159,23 @@ export class DetailsView extends View {
           ctx.restore()
         }
         const lh = this.line_height
-        ctx.fillText(nfmt(item.name), 1280 - 600, this.rect.y + lh * 0)
-        ctx.fillText(item.name, 1280 - 600, this.rect.y + lh * 1)
-        ctx.fillText(item.key, 1280 - 600, this.rect.y + lh * 2)
-        ctx.fillText(fmt(value), 1280 - 600, this.rect.y + lh * 3)
+        let k = 0;
+        ctx.fillText(nfmt(item.name), 1280 - 600, this.rect.y + lh * k)
+        if (item.name != nfmt(item.name)) {
+          k += 1
+          ctx.fillText(item.name, 1280 - 600, this.rect.y + lh * k)
+        }
+        if (item.key != item.name) {
+          k += 1
+          ctx.fillText(item.key, 1280 - 600, this.rect.y + lh * k)
+        }
+        k += 1
+        ctx.fillText(fmt(value), 1280 - 600, this.rect.y + lh * k)
         if (item.txt) {
+          k += 1
           let lines = item.txt.split("\n")
-          for (let k = 0; k < lines.length; k++) {
-            ctx.fillText(lines[k], 1280 - 600, this.rect.y + lh * 4 + k)
+          for (let j = 0; j < lines.length; j++) {
+            ctx.fillText(lines[j], 1280 - 600, this.rect.y + lh * (k + j))
           }
         }
       }

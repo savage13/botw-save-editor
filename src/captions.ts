@@ -36,7 +36,26 @@ export class CaptionView extends View {
   }
   key_a() {
     const index = this.selected_index()
+    if (this.data.saves.length <= 0 || index < 0)
+      return
     this.dispatchEvent(new CustomEvent("click", { detail: index }))
+  }
+
+  caption_status(ctx: any) {
+    ctx.save()
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = this.fg_color
+    this.set_font(18)
+    let x = this.rect.x + this.rect.w
+    let y = this.rect.y + this.rect.h
+    if (!this.data.saves) {
+      ctx.fillText('No saves loaded', x, y)
+    } else if (this.data.saves.length == 0)
+      ctx.fillText('Reading caption data ...', x, y)
+    else
+      ctx.fillText('Caption data loaded', x, y)
+    ctx.restore()
   }
 
   commands(): any { return { A: "Select", B: "Back" } }
@@ -44,19 +63,20 @@ export class CaptionView extends View {
   title(): string { return "Save Files" }
 
   async update() {
-    if (this.data.saves.length != this.num_saves)
-      this.data_updated()
-    if (this.num_saves == 0)
-      return
     const ctx = this.get_ctx()
+
     ctx.save()
     this.set_font(24)
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-
     ctx.fillStyle = this.fg_color
-
     this.clear()
+
+    this.caption_status(ctx)
+    if (this.data.saves.length != this.num_saves)
+      this.data_updated()
+    if (this.num_saves == 0)
+      return
 
     const w = 256 // Image Width
     const h = 270 //

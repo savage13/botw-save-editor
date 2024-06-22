@@ -43,8 +43,9 @@ function run_test() {
   ]
   for (const t of tests) {
     let out = parse_var(t[0])
-    if (!acomp(t[1], out))
-      console.log(t, out)
+    if (!acomp(t[1], out)) {
+      //console.log(t, out)
+    }
   }
 }
 //run_test()
