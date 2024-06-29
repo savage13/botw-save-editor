@@ -5,6 +5,9 @@ BotW Save Editor
 
 You can download [BotwSaveEditor.nro](https://github.com/savage13/botw-save-editor/releases/download/v0.1.1/BotwSaveEditor.nro) (v0.1.0) directly or from [Releases](https://github.com/savage13/botw-save-editor/releases)
 
+Place `BotwSaveEditor.nro` in your `switch` folder on your Switch.  
+You can do this using ftpd or similar program
+
 ### Building
 
     npm install
