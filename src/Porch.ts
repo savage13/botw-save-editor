@@ -10,6 +10,32 @@ export enum PorchType {
   KeyItem = "KeyItem",
 }
 
+export function porch_items(ptype: PorchType): string[] {
+  // @ts-ignore
+  const nums = Object.keys(PorchName).filter(v => Number(v)).filter(v => is_type(v as PorchName, ptype))
+  return nums.map(v => PorchName[v])
+}
+
+function is_type(name: PorchName, ptype: PorchType) {
+  let limits = [0, 0]
+  if (ptype == PorchType.Bow)
+    limits = [PorchName.Bow_Start, PorchName.Bow_End]
+  else if (ptype == PorchType.Arrow)
+    limits = [PorchName.Arrow_Start, PorchName.Arrow_End]
+  else if (ptype == PorchType.Weapon)
+    limits = [PorchName.Weapon_Start, PorchName.Weapon_End]
+  else if (ptype == PorchType.Shield)
+    limits = [PorchName.Shield_Start, PorchName.Shield_End]
+  else if (ptype == PorchType.Armor)
+    limits = [PorchName.Armor_Start, PorchName.Armor_End]
+  else if (ptype == PorchType.Material)
+    limits = [PorchName.Item_Material_Start, PorchName.Item_Material_End]
+  else if (ptype == PorchType.Food)
+    limits = [PorchName.Item_Cook_Start, PorchName.Item_Cook_End]
+  else if (ptype == PorchType.KeyItem)
+    limits = [PorchName.Item_Key_Start, PorchName.Item_Key_End]
+  return name > limits[0] && name < limits[1]
+}
 
 export function to_porch_type(name: PorchName) {
   if (name == PorchName.None)

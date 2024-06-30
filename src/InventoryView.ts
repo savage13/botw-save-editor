@@ -4,17 +4,27 @@ import { HidNpadButton } from '@nx.js/constants';
 import { View, Rect } from './View'
 import { is_any_up, is_any_right, is_any_down, is_any_left } from './View'
 import { is_up, is_right, is_down, is_left } from './View'
+import { porch_items } from './Porch'
+import { Message } from './message'
 
 import { PorchItem, Modifier, ModVals, PorchName } from './savefile'
 import { fillRect, strokeRect, checkbox } from './draw'
 import { spicy, hasty, chilly, electro, sneaky, stamina_circle, heart } from './draw'
 import { CookEffectValues, CookEffectKeys, CookEffect } from './cook_effect'
 import { ItemDisplay2View, ItemDialogView } from './item_display'
-import { UI, heart_ui, duration_ui } from './formatters'
+import { UI, heart_ui, duration_ui, name_ui } from './formatters'
 import { clamp, range } from './util'
 
 const ROW = 0
 const COL = 1
+
+function warning(state: any, msg: string) {
+  state.push_view(new Message(state, Rect.percent(0.33, 0.33, 0.33, 0.33), {
+    msg, title: "", ok_cancel: true,
+    on_confirm: () => { state.views.pop() },
+    on_cancel: () => { state.views.pop() },
+  }))
+}
 
 
 export class InventoryView extends View {
@@ -144,7 +154,9 @@ export class InventoryView extends View {
       const y = 720 * 0.33
       const w = 1280 * 0.33
       const h = 720 * 0.33
-      const items = Object.keys(PorchName).filter(v => isNaN(Number(v)))
+      const ptype = this.data.save.pouch_items[this.edit_index].ptype
+      const items = porch_items(ptype)
+      items.sort((a, b) => name_ui(a).localeCompare(name_ui(b)))
       const v = new ItemDialogView(this.state, new Rect(x, y, w, h), {
         items: items,
         save: this.data.save,
@@ -258,7 +270,9 @@ export class InventoryView extends View {
       Bow: 14,
       Arrow: 6,
       Armor: 100,
-      Food: 60,
+      Food: 60, // 3 pages
+      KeyItem: 420,
+      Material: 420,
     }
     //console.log("ZL PLUS");
     const new_names: any = {
@@ -267,15 +281,15 @@ export class InventoryView extends View {
       Shield: 'Weapon_Shield_040',
       Arrow: 'NormalArrow',
       Armor: 'Armor_001_Head',
-      Cook: 'Item_Boiled_01',
+      Food: 'Item_Boiled_01',
       Material: 'Item_Ore_I',
       KeyItem: 'Obj_DungeonClearSeal',
     }
 
     if (this.data.save.pouch_items.length + 1 > MAX.Total) {
+      warning(this.state, "Max inventory at 420")
       return "preventDefault"
     }
-
     let k = this.selected_index()
     let item = this.data.items[k]
     // Save original type if on header
@@ -295,14 +309,25 @@ export class InventoryView extends View {
       let v = item.key.split(".")
       let index = parseInt(v[0].split("[")[1].replace("]", ""))
       const value = this.data.save.pouch_items[index]
-      let pt = (ptype0) ? ptype0 : value.ptype
+      let pt = (ptype0) ? ptype0 : value.ptype // Pouch Type
       new_item.name = new_names[pt]
       if (!ptype0)
         index += 1
-      if (pt in MAX && this.data.save.pouch_items.length + 1 >= MAX[pt])
+      const count = this.data.save.pouch_items.filter((v: any) => v.ptype == pt).length
+      if (!(pt in MAX)) {
+        warning(this.state, `Unknown Pouch Type: ${pt}`)
         return "preventDefault"
+      }
+      if (count + 1 > MAX[pt]) {
+        warning(this.state, `Max ${pt} inventory at ${count}`)
+        return "preventDefault"
+      }
+      if (pt == "Food") {
+        new_item.cook_effect0 = [-1, 0] // Hearts
+        new_item.value = 1
+        new_item.stamina_recover = [4, 0] // Hearts
+      }
       this.data.save.pouch_items.splice(index, 0, new_item)
-
     }
     this.state.update_pouch_items_details(this.data.save)
     this.data.items = this.state.details["Pouch Items"]
