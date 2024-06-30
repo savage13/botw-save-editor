@@ -31,7 +31,7 @@ const Weathers: { [key: number]: any } = {
 
 const WeatherNames = [
   "Sun", "Cloudy", "Rain", "Heavy Rain",
-  "Snow", "Heavy Snown", "Thunder Storm", "Thunder Rain",
+  "Snow", "Heavy Snown", "Thunder No Rain", "Thunder and Rain",
   "Blue Sky Rain"
 ]
 
