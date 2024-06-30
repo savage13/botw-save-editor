@@ -21,8 +21,18 @@ export class Message extends View {
     if (this.data.on_update)
       this.data.on_update()
   }
+  clear_all(): boolean {
+    return false;
+  }
+  title(): string {
+    return ""
+  }
 
-  commands(): any { return { A: "Ok", B: "Cancel" } }
+  commands(): any {
+    if (this.data.ok_cancel)
+      return { A: "Ok", B: "Cancel" }
+    return { '+': 'Quit Editor' }
+  }
 
   async update() {
     const ctx = this.get_ctx()
@@ -50,7 +60,11 @@ export class Message extends View {
       ctx.textBaseline = "middle";
       let x1 = x + w / 2
       let y1 = y + h / 2
-      ctx.fillText(this.data.msg, x1, y1)
+      const msgs = this.data.msg.split("\n")
+      y1 -= (msgs.length / 2) * this.line_height;
+      msgs.forEach((msg: string, k: number) => {
+        ctx.fillText(msg, x1, y1 + k * this.line_height)
+      })
     }
     if (this.data.ok_cancel) {
       ctx.textAlign = "right";

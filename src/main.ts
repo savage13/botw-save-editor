@@ -189,7 +189,7 @@ async function read_game_data(slot: any): Promise<any> {
 }
 
 
-async function load_save_file_data_fetch() {
+async function load_save_file_data_fetch(): Promise<any> {
   const names = [0, 1, 2, 3, 4, 5, 6, 7];
   let slots: any = []
   //console.log("NAMES", names)
@@ -244,7 +244,12 @@ async function load_save_file_data_filter(game_name: string, nickname: string): 
   }
 
   // Mount save data
-  let m = save_data.mount()
+  let m: any;
+  try {
+    m = save_data.mount()
+  } catch (error) {
+    return undefined;
+  }
 
   //console.log("MOUNT", m)
   // See all files in directory (for totk, this is the slots directory)
@@ -354,11 +359,6 @@ const HidNpadButton_AnyDir =
   HidNpadButton.AnyRight |
   HidNpadButton.AnyUp |
   HidNpadButton.AnyDown
-
-
-
-
-
 
 const lock = new AsyncLock()
 
@@ -701,10 +701,12 @@ class State {
 
 
   async load_caption_data(nickname: string) {
-    //console.log("CAPTION DATA");
     await new Promise(async (resolve, _reject) => {
       //console.log("CAPTION DATA LOAD");
-      const new_saves = await load_save_file_data_filter(BOTW, nickname);
+      let new_saves = await load_save_file_data_filter(BOTW, nickname)
+      if (new_saves === undefined) {
+        return _reject('Error loading save data D:\nIs BotW running?\nPress + to Quit Editor\nClose BotW and Relaunch Editor')
+      }
       for (const save of new_saves) {
         await read_caption_plus(save);
       }
@@ -716,7 +718,14 @@ class State {
       resolve(true)
     }).then(async () => {
       this.update();
-    });
+    }).catch((error) => {
+      this.push_view(new Message(this, Rect.percent(0.33, 0.33, 0.33, 0.33), {
+        msg: `${error}`, title: "", ok_cancel: false,
+        on_confirm: () => { },
+        on_cancel: () => { }
+      }))
+    })
+    return;
   }
 
   async show_captions(profile: any) {
