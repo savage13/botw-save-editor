@@ -1,4 +1,6 @@
 
+import { FONT } from './View'
+
 export function fillRect(ctx: any, x: number, y: number, w: number, h: number, fill: string) {
   ctx.save()
   ctx.beginPath()
@@ -267,7 +269,15 @@ export function heart(ctx: any, x: number, y: number, color: string) {
   ctx.restore()
 }
 
+
+export function rain2(ctx: any, x: number, y: number) {
+  rain_draw(ctx, x, y, true)
+}
 export function rain(ctx: any, x: number, y: number) {
+  rain_draw(ctx, x, y, false)
+}
+
+function rain_draw(ctx: any, x: number, y: number, box: boolean = false) {
   //ctx.drawImage(rain,0,0)
 
   ctx.fillStyle = "lightblue"
@@ -312,8 +322,23 @@ export function rain(ctx: any, x: number, y: number) {
 
   //ctx.stroke()
   ctx.fill()
+
+  if (box) {
+    ctx.beginPath()
+    ctx.lineWidth = 1
+    ctx.strokeStyle = 'lightblue'
+    ctx.roundRect(x0 - 7, y0 - 6, 27, 29, 10)
+    ctx.stroke()
+  }
+
+}
+export function sun2(ctx: any, x0: number, y0: number) {
+  sun_draw(ctx, x0, y0, true)
 }
 export function sun(ctx: any, x0: number, y0: number) {
+  sun_draw(ctx, x0, y0, false)
+}
+export function sun_draw(ctx: any, x0: number, y0: number, box: boolean = false) {
 
   ctx.strokeStyle = "rgba(255,0,0,0)"
   ctx.fillStyle = "#fce23a"
@@ -332,6 +357,36 @@ export function sun(ctx: any, x0: number, y0: number) {
     ctx.fill()
     ctx.stroke()
   }
+  if (box) {
+    ctx.beginPath()
+    ctx.lineWidth = 1
+    ctx.strokeStyle = 'lightblue'
+    ctx.roundRect(x0 - 14, y0 - 15, 27, 29, 10)
+    ctx.stroke()
+  }
+}
+
+export function storm2(ctx: any, x0: number, y0: number) {
+
+  x0 -= 18
+  y0 -= 18
+  ctx.beginPath()
+  ctx.fillStyle = "#f4fc7e"
+  ctx.moveTo(x0 + 14, y0 + 9)
+  ctx.lineTo(x0 + 23, y0 + 9)
+  ctx.lineTo(x0 + 20, y0 + 15)
+  ctx.lineTo(x0 + 27, y0 + 15)
+  ctx.lineTo(x0 + 13, y0 + 29)
+  ctx.lineTo(x0 + 17, y0 + 20)
+  ctx.lineTo(x0 + 9, y0 + 20)
+  ctx.lineTo(x0 + 14, y0 + 9)
+  ctx.fill()
+  ctx.strokeStyle = "#f4fc7e"
+  ctx.beginPath()
+  ctx.lineWidth = 1
+  ctx.roundRect(x0 + 4, y0 + 3, 27, 29, 10)
+  ctx.stroke()
+
 }
 
 export function storm(ctx: any, x0: number, y0: number) {
@@ -351,7 +406,13 @@ export function storm(ctx: any, x0: number, y0: number) {
   ctx.fill()
 }
 
+export function snow2(ctx: any, x0: number, y0: number) {
+  snow_draw(ctx, x0, y0, true)
+}
 export function snow(ctx: any, x0: number, y0: number) {
+  snow_draw(ctx, x0, y0, false)
+}
+export function snow_draw(ctx: any, x0: number, y0: number, box: boolean = false) {
   const pts = [
     [[0, -10], [0, 10]],
     [[9, -10 + 5], [-9, 10 - 5]],
@@ -368,6 +429,13 @@ export function snow(ctx: any, x0: number, y0: number) {
     const b = p[1]
     ctx.moveTo(x0 + a[0], y0 + a[1])
     ctx.lineTo(x0 + b[0], y0 + b[1])
+    ctx.stroke()
+  }
+  if (box) {
+    ctx.beginPath()
+    ctx.lineWidth = 1
+    ctx.strokeStyle = "#eeeeee"
+    ctx.roundRect(x0 - 14, y0 - 14, 27, 29, 10)
     ctx.stroke()
   }
 }

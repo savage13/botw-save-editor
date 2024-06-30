@@ -3,7 +3,7 @@ import { HidNpadButton } from '@nx.js/constants';
 
 import { clamp } from './util'
 
-let FONT = "system-ui"
+export let FONT = "system-ui"
 const FG_COLOR = "#d4edfc"
 const BG_COLOR = "#000000"
 const ACTIVE_COLOR = "#219e63"
@@ -128,6 +128,8 @@ export class View extends EventTarget {
   get_ctx() {
     return this.state.ctx
   }
+  key_l() { }
+  key_r() { }
   key_a() { }
   key_b() { }
   key_y() { }
@@ -162,9 +164,12 @@ export class View extends EventTarget {
       return this.key_b()
     if (detail & HidNpadButton.X)
       return this.key_x()
-
     if (detail & HidNpadButton.Y)
       return this.key_y()
+    if (detail & HidNpadButton.L)
+      return this.key_l()
+    if (detail & HidNpadButton.R)
+      return this.key_r()
 
     if (this.key_dir(detail))
       return

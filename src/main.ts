@@ -346,6 +346,8 @@ const mapping: any = {
   'Minus': HidNpadButton.Minus | HidNpadButton.ZL,
   'Equal': HidNpadButton.Plus | HidNpadButton.ZL,
   'Alt': HidNpadButton.ZL,
+  'KeyL': HidNpadButton.L,
+  'KeyR': HidNpadButton.R,
 }
 const HidNpadButton_AnyDir =
   HidNpadButton.AnyLeft |

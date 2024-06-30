@@ -1,7 +1,7 @@
 
 import { View, Rect } from './View'
 
-import { strokeRect, fillRect, sun, rain, cloudy, snow, storm } from './draw'
+import { strokeRect, fillRect, sun, rain, cloudy, snow, storm, storm2, rain2, snow2, sun2 } from './draw'
 import { pos_to_map } from './formatters'
 import { read_json } from './savefile'
 import { ItemDialogView } from './item_display'
@@ -21,13 +21,19 @@ const Weathers: { [key: number]: any } = {
   0: sun,    // Blue Sky
   1: cloudy,      // Cloudy
   2: rain,      // Rain
-  3: rain,  // Heavy Rain
+  3: rain2,  // Heavy Rain
   4: snow,     // Snow
-  5: snow, // HeavySnow
+  5: snow2, // HeavySnow
   6: storm,    // ThunderStorm
-  7: storm, // ThunderRain
-  8: sun,   // BlueSkyRain
+  7: storm2, // ThunderRain
+  8: sun2,   // BlueSkyRain
 }
+
+const WeatherNames = [
+  "Sun", "Cloudy", "Rain", "Heavy Rain",
+  "Snow", "Heavy Snown", "Thunder Storm", "Thunder Rain",
+  "Blue Sky Rain"
+]
 
 const ROW = 0
 const COL = 1
@@ -86,8 +92,28 @@ export class WeatherView extends View {
     this.set_widths([0.3, w, w, w, w, w, w].map(v => v * this.rect.w))
 
   }
+  key_r() {
+    if (this.selected[COL] == 0)
+      return
+    let row = this.selected[ROW]
+    let col = this.selected[COL] - 1
+
+    const value = this.cw[row][col]
+    for (let i = col; i < 6; i++) {
+      this.cw[row][i] = value
+    }
+    let out = this.pack(this.cw)
+    this.state.active_edits['climateWeather'] = out
+    if (!this.is_modified(out)) {
+      delete this.state.active_edits['climateWeather']
+    }
+  }
   key_b() {
     this.dispatchEvent(new CustomEvent("cancel"))
+  }
+  key_y() {
+    delete this.state.active_edits['climateWeather']
+    this.cw = this.unpack(this.value())
   }
   key_a() {
     if (this.selected[COL] == 0)
@@ -126,7 +152,7 @@ export class WeatherView extends View {
     this.dispatchEvent(new CustomEvent("write"))
   }
   title(): string { return "Weather" }
-  commands(): any { return { X: "Write", B: "Back", A: "Select" } }
+  commands(): any { return { X: "Write", B: "Back", A: "Select", R: "Right Fill", Y: 'Revert' } }
 
   is_modified(current: any) {
     const orig = this.value()
@@ -204,11 +230,8 @@ export class WeatherView extends View {
         ctx.save()
         fn(ctx, p.x + p.w / 2, p.y + p.h / 2)
         ctx.restore()
-        if (cw[i][j] == 3 || cw[i][j] == 5) {
-          strokeRect(ctx, p.x, p.y, p.w, p.h, "#666666")
-        }
       } else {
-        ctx.fillText(item.key, p.x, p.y)
+        ctx.fillText(item.key, p.x, p.y + 4)
       }
       if (p.row == this.selected[ROW] && p.col == this.selected[COL]) {
         strokeRect(ctx, p.x, p.y, p.w, p.h, this.fg_color)
@@ -241,6 +264,19 @@ export class WeatherView extends View {
     }
     ctx.fill()
 
+    const x = 1280 - 600 + 100
+    let y = this.rect.y + 20
+    i = 0
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    for (let fn of Object.values(Weathers)) {
+      let dx = (i % 2) * 250
+      let dy = Math.floor(i / 2) * this.line_height * 1.1
+      fn(ctx, x + dx, y + dy)
+      ctx.fillText(WeatherNames[i], x + dx + 20, y + dy)
+      i += 1
+    }
     ctx.restore()
   }
 }
