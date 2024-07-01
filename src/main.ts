@@ -18,9 +18,7 @@ import { clamp, loadImage } from './util'
 import { star } from './draw'
 import { scale_points } from './LevelSensor'
 
-import * as PACKAGE from '../package.json'
-
-const VERSION = PACKAGE.version;
+import { VERSION } from './version'
 
 // @ts-ignore
 import Details from './details.json';
@@ -470,7 +468,8 @@ class State {
     this.ctx.textAlign = "left";
     this.ctx.textBaseline = "top";
     this.ctx.fillText("BotW Save Editor", 0, 0);
-    this.ctx.fillText(`${VERSION}`, 0, 0);
+    this.ctx.font = `11px ${FONT}`
+    this.ctx.fillText(`${VERSION}`, 0, 26);
     this.ctx.restore();
   }
 
