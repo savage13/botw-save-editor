@@ -140,6 +140,8 @@ export class View extends EventTarget {
   key_zl_left() { }
   key_zl_minus() { }
   key_zl_plus() { }
+  key_zl() { }
+  key_zr() { }
 
   key_dir(_detail: any): boolean {
     return false
@@ -170,6 +172,10 @@ export class View extends EventTarget {
       return this.key_l()
     if (detail & HidNpadButton.R)
       return this.key_r()
+    if (detail & HidNpadButton.ZR)
+      return this.key_zr()
+    if (detail & HidNpadButton.ZL)
+      return this.key_zl()
 
     if (this.key_dir(detail))
       return

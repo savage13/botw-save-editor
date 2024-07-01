@@ -352,7 +352,8 @@ const mapping: any = {
   'Equal': HidNpadButton.Plus | HidNpadButton.ZL,
   'Alt': HidNpadButton.ZL,
   'KeyL': HidNpadButton.L,
-  'KeyR': HidNpadButton.R,
+  'KeyG': HidNpadButton.ZL,
+  'KeyH': HidNpadButton.ZR,
 }
 const HidNpadButton_AnyDir =
   HidNpadButton.AnyLeft |
@@ -1037,7 +1038,7 @@ class State {
         this.ctx.textBaseline = "top";
         let k = 0;
         for (const [key, val] of Object.entries(comms)) {
-          this.ctx.fillText(`${key} ${val}`, 1250 - k * 150, 10)
+          this.ctx.fillText(`${key}: ${val}`, 1250 - k * 150, 10)
           k += 1
         }
         this.ctx.restore()

@@ -5,7 +5,7 @@ import { strokeRect, fillRect, sun, rain, cloudy, snow, storm, storm2, rain2, sn
 import { pos_to_map } from './formatters'
 import { read_json } from './savefile'
 import { ItemDialogView } from './item_display'
-import { loadImageFile } from './util'
+import { loadImageFile, clamp } from './util'
 
 // @ts-ignore
 import MapUrl from './BotW-Map-small.jpg';
@@ -43,8 +43,8 @@ export class WeatherView extends View {
   climates_keys: string[];
   climates: string[];
   items: any[];
-
-  cw: any;
+  day: number;
+  cw: any[];
 
   constructor(state: any, rect: Rect, data: any) {
     super(state, rect, data)
@@ -54,6 +54,7 @@ export class WeatherView extends View {
     this.rect.w -= 2 * padding
     this.rect.h -= 2 * padding
     this.cols = 7
+    this.day = 0
     this.climates_keys = [
       "HyrulePlainClimate", "NorthHyrulePlainClimate", "HebraFrostClimate", // Rain to Snow (2)
       "TabantaAridClimate", "FrostClimate",   // Rain to Snow (4)
@@ -97,22 +98,45 @@ export class WeatherView extends View {
       return
     let row = this.selected[ROW]
     let col = this.selected[COL] - 1
+    let day = this.day
 
-    const value = this.cw[row][col]
+    const value = this.cw[day][row][col]
     for (let i = col; i < 6; i++) {
-      this.cw[row][i] = value
+      this.cw[day][row][i] = value
     }
-    let out = this.pack(this.cw)
-    this.state.active_edits['climateWeather'] = out
+    this.store_weather_edits(this.cw)
+  }
+
+  store_weather_edits(unpacked_values: any) {
+    let out = this.pack(unpacked_values)
+    this.state.active_edits['climateWeather'] = out[0]
+    this.state.active_edits['climateWeather2'] = out[1]
+    this.state.active_edits['climateWeather3'] = out[2]
     if (!this.is_modified(out)) {
-      delete this.state.active_edits['climateWeather']
+      this.clear_weather_edits()
     }
   }
+
+  clear_weather_edits() {
+    delete this.state.active_edits['climateWeather']
+    delete this.state.active_edits['climateWeather2']
+    delete this.state.active_edits['climateWeather3']
+  }
+
+  value() {
+    const save = this.state.active_save();
+    return [
+      save.get('climateWeather'),
+      save.get('climateWeather2'),
+      save.get('climateWeather3')
+    ]
+  }
+
   key_b() {
     this.dispatchEvent(new CustomEvent("cancel"))
   }
   key_y() {
-    delete this.state.active_edits['climateWeather']
+    this.clear_weather_edits()
     this.cw = this.unpack(this.value())
   }
   key_a() {
@@ -124,21 +148,18 @@ export class WeatherView extends View {
     const w = 1280 * 0.33
     const h = 720 * 0.33
 
+    let day = this.day
     let row = this.selected[ROW]
     let col = this.selected[COL] - 1
     const v = new ItemDialogView(this.state, new Rect(x, y, w, h), {
       items: Object.keys(Weathers),
-      selected: this.cw[row][col],
+      selected: this.cw[day][row][col],
       draw: (value: any) => {
         return Weathers[value]
       },
       set_value: (value: any) => {
-        this.cw[row][col] = parseInt(value)
-        let out = this.pack(this.cw)
-        this.state.active_edits['climateWeather'] = out
-        if (!this.is_modified(out)) {
-          delete this.state.active_edits['climateWeather']
-        }
+        this.cw[day][row][col] = parseInt(value)
+        this.store_weather_edits(this.cw)
       }
     })
     v.addEventListener('cancel', (_ev: CustomEvent) => {
@@ -148,48 +169,62 @@ export class WeatherView extends View {
     //this.dispatchEvent(new CustomEvent("cancel"))
   }
   key_x() {
-    this.state.active_edits['climateWeather'] = this.pack(this.cw)
     this.dispatchEvent(new CustomEvent("write"))
   }
+  key_zl() {
+    this.day = clamp(this.day - 1, 0, 2)
+  }
+  key_zr() {
+    this.day = clamp(this.day + 1, 0, 2)
+  }
   title(): string { return "Weather" }
-  commands(): any { return { X: "Write", B: "Back", A: "Select", R: "Right Fill", Y: 'Revert' } }
+  commands(): any {
+    return { X: "Write", B: "Back", A: "Select", R: "Right Fill", Y: 'Revert', ZR: '+1Day', ZL: '-1Day', }
+  }
 
   is_modified(current: any) {
+    // Works on the packed values
     const orig = this.value()
-    for (let i = 0; i < 20; i++) {
-      if (orig[i] != current[i])
-        return true
+    for (let d = 0; d < 3; d++) {
+      for (let i = 0; i < 20; i++) {
+        if (orig[d][i] != current[d][i])
+          return true
+      }
     }
     return false
   }
 
-  value() {
-    const save = this.state.active_save();
-    return save.get('climateWeather')
-  }
 
   unpack(values: any) {
-    let out = []
-    for (const r of values) {
-      let tmp = []
-      for (let i = 0; i < 6; i++) {
-        tmp.push((r >> (i * 4)) & 0xF)
+    let days = []
+    for (let d = 0; d < 3; d++) {
+      let out = []
+      for (const r of values[d]) {
+        let tmp = []
+        for (let i = 0; i < 6; i++) {
+          tmp.push((r >> (i * 4)) & 0xF)
+        }
+        out.push(tmp)
       }
-      out.push(tmp)
+      days.push(out)
     }
-    return out
+    return days
   }
 
   pack(values: any) {
-    let out = []
-    for (const r of values) {
-      let v = 0
-      for (let i = 0; i < 6; i++) {
-        v = v | (r[i] << (i * 4))
+    let days = []
+    for (let d = 0; d < 3; d++) {
+      let out = []
+      for (const r of values[d]) {
+        let v = 0
+        for (let i = 0; i < 6; i++) {
+          v = v | (r[i] << (i * 4))
+        }
+        out.push(v)
       }
-      out.push(v)
+      days.push(out)
     }
-    return out
+    return days
   }
 
   async update() {
@@ -198,7 +233,7 @@ export class WeatherView extends View {
     if (Regions == undefined)
       Regions = await read_json(RegionsUrl)
 
-    let cw = this.cw
+    let cw = this.cw[this.day]
 
     const ctx = this.get_ctx()
     ctx.save()
@@ -277,6 +312,11 @@ export class WeatherView extends View {
       ctx.fillText(WeatherNames[i], x + dx + 20, y + dy)
       i += 1
     }
+
+    this.set_font(32)
+    ctx.fillStyle = this.fg_color;
+    ctx.fillText(`Day ${this.day + 1} / 3`, 550, 680)
+
     ctx.restore()
   }
 }
