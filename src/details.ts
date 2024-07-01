@@ -4,6 +4,7 @@ import { is_up, is_down, is_any_up, is_any_right, is_any_left, is_any_down } fro
 import { fillRect, checkbox } from './draw'
 import { UI, tower_pos, pos_to_map } from './formatters'
 import { clamp, loadImageFile } from './util'
+import { scale_actor } from './LevelSensor'
 
 const ROW = 0
 
@@ -144,7 +145,9 @@ export class DetailsView extends View {
 
       if (p.row == this.selected[ROW]) {
         ctx.drawImage(MapImage, 1280 - 600, 720 - 500)
-        const pos = tower_pos(item.name)
+        let pos = tower_pos(item.name)
+        if (item.key.startsWith("PlayerSavePos"))
+          pos = this.value("PlayerSavePos")
         if (pos) {
           const ipos = pos_to_map(pos)
           ctx.save()
@@ -173,9 +176,14 @@ export class DetailsView extends View {
         ctx.fillText(fmt(value), 1280 - 600, this.rect.y + lh * k)
         if (item.txt) {
           k += 1
-          let lines = item.txt.split("\n")
+          let txt = item.txt
+          if (item.key == "DifficultyScale") {
+            const args = scale_actor(this.data.save.data)
+            txt = txt.replace(/\${(\w+)}/g, (_, v) => args[v])
+          }
+          let lines = txt.split("\n")
           for (let j = 0; j < lines.length; j++) {
-            ctx.fillText(lines[j], 1280 - 600, this.rect.y + lh * (k + j))
+            ctx.fillText(lines[j].trim(), 1280 - 600, this.rect.y + lh * (k + j))
           }
         }
       }

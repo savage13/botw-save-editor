@@ -16,6 +16,7 @@ import { Message } from './message'
 import { load_locations } from './formatters'
 import { clamp, loadImage } from './util'
 import { star } from './draw'
+import { scale_points } from './LevelSensor'
 
 // @ts-ignore
 import Details from './details.json';
@@ -142,6 +143,9 @@ async function read_caption_plus(save: any): Promise<any> {
         return undefined
       return save.pouch_item(key)
     }
+    if (key == 'DifficultyScale') {
+      return scale_points(save)
+    }
     if (key in CaptionKeys) {
       if (!save.caption)
         return undefined
@@ -157,6 +161,10 @@ async function read_caption_plus(save: any): Promise<any> {
         return undefined
       return save.pouch_item_type(key)
     }
+    if (key == 'DifficultyScale') {
+      return "string"
+    }
+
     if (key in CaptionKeys) {
       if (!save.caption)
         return undefined
