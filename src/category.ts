@@ -13,11 +13,11 @@ export class CategoryView extends View {
     this.rect.y += padding
     this.rect.w -= 2 * padding
     this.rect.h -= 2 * padding
-    this.line_height = this.rect.h / 2
+    this.line_height = this.rect.h / 3
     const n = this.data.items.length
     this.rows = Math.ceil(n / 4)
     this.cols = (n > 4) ? 4 : n
-    this.line_height = this.rect.h / 2
+    this.line_height = this.rect.h / 3
     this.calc_nlines()
     this.set_widths([0.25, 0.25, 0.25, 0.25].map((v: number) => v * this.rect.w))
     this.msg = ""

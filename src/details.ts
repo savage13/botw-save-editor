@@ -144,7 +144,8 @@ export class DetailsView extends View {
         ctx.fillText(fmt(value), p.x + w_name, p.y + 0.1 * this.font_size)
 
       if (p.row == this.selected[ROW]) {
-        ctx.drawImage(MapImage, 1280 - 600, 720 - 500)
+        if (this.data.title != "Defeated Enemies")
+          ctx.drawImage(MapImage, 1280 - 600, 720 - 500)
         let pos = tower_pos(item.name)
         if (item.key.startsWith("PlayerSavePos"))
           pos = this.value("PlayerSavePos")
@@ -178,7 +179,7 @@ export class DetailsView extends View {
           k += 1
           let txt = item.txt
           if (item.key == "DifficultyScale") {
-            const args = scale_actor(this.data.save.data)
+            const args = scale_actor(this.data.save.data, this.state.active_edits)
             txt = txt.replace(/\${(\w+)}/g, (_, v) => args[v])
           }
           let lines = txt.split("\n")
@@ -188,6 +189,33 @@ export class DetailsView extends View {
         }
       }
       i += 1
+    }
+    if (this.data.title == "Defeated Enemies") {
+      const args = scale_actor(this.data.save.data, this.state.active_edits)
+      this.set_font(28)
+      ctx.fillText(`Difficulty Scaling`, 1280 - 600, this.rect.y + this.line_height * 6.5)
+      ctx.beginPath()
+      ctx.strokeStyle = this.fg_color
+      ctx.lineWidth = 2
+      ctx.moveTo(1280 - 600, this.rect.y + this.line_height * 7.5)
+      ctx.lineTo(1280 - 600 + 500, this.rect.y + this.line_height * 7.5)
+      ctx.stroke()
+      this.set_font(24)
+      ctx.fillText(`Points: ${args.scale_points}`, 1280 - 600 + 30, this.rect.y + this.line_height * 8)
+      ctx.fillText(`Enemy Points: ${args.enemy_points}`, 1280 - 600 + 30, this.rect.y + this.line_height * 9)
+      ctx.fillText(`              = points * 0.014`, 1280 - 600 + 30, this.rect.y + this.line_height * 10)
+      ctx.fillText(`Weapons Points: ${args.weapon_points}`, 1280 - 600 + 30, this.rect.y + this.line_height * 11)
+      ctx.fillText(`              = points * 0.012`, 1280 - 600 + 30, this.rect.y + this.line_height * 12)
+      let k = 14
+      for (const key of ['BokoblinSeries', 'LizalfosSeries', 'MoriblinSeries', 'LynelSeries', 'AssassinSeries']) {
+        const k1 = `${key}_current`
+        const k2 = `${key}_current_value`
+        const k3 = `${key}_next`
+        const k4 = `${key}_next_value`
+        const trans = (args[k3] != "") ? "--" : "(maxed)"
+        ctx.fillText(`${args[k1]} ${args[k2]} ${trans} ${args[k3]} ${args[k4]}`, 1280 - 600 + 30, this.rect.y + this.line_height * k)
+        k += 1
+      }
     }
 
     ctx.restore()

@@ -93,18 +93,27 @@ const LevelSensor = {
   },
 }
 
-export function scale_points(s: Savefile): number {
+export function scale_points(s: Savefile, updated: any): number {
   let points = 0
   for (const [enemy, pts] of Object.entries(LevelSensor.points)) {
-    const n = s.get(enemy)
+    let n = s.get(enemy)
+    if (enemy in updated) {
+      n = updated[enemy]
+    }
     points += n * pts
   }
   return points;
 }
 
-export function scale_actor(s: Savefile) {
-  const enemy_points = scale_points(s) * LevelSensor.setting.Level2EnemyPower;
-  let out: any = { enemy_points: enemy_points.toFixed(1) }
+export function scale_actor(s: Savefile, updated: any): any {
+  const points = scale_points(s, updated)
+  const enemy_points = points * LevelSensor.setting.Level2EnemyPower;
+  const weapon_points = points * LevelSensor.setting.Level2WeaponPower;
+  let out: any = {
+    enemy_points: enemy_points.toFixed(1),
+    scale_points: points.toFixed(1),
+    weapon_points: weapon_points.toFixed(1),
+  }
   for (const [name, series] of Object.entries(LevelSensor.series)) {
     let i = 0;
     while (i < series.length) {
