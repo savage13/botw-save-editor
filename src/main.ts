@@ -146,7 +146,7 @@ async function read_caption_plus(save: any): Promise<any> {
       return save.pouch_item(key)
     }
     if (key == 'DifficultyScale') {
-      return scale_points(save)
+      return scale_points(save, {})
     }
     if (key in CaptionKeys) {
       if (!save.caption)

@@ -85,6 +85,10 @@ export class DetailsView extends View {
   value(key: string): any {
     if (key in this.state.active_edits)
       return this.state.active_edits[key]
+    if (key == "DifficultyScale") {
+      const args = scale_actor(this.data.save.data, this.state.active_edits)
+      return args.scale_points;
+    }
     return this.data.save.get(key)
   }
 
