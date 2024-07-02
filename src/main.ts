@@ -12,6 +12,7 @@ import { CategoryView } from './category'
 import { DetailsView } from './details'
 import { DemosView } from './demos_view'
 import { WeatherView } from './weather'
+import { AmiiboView } from './amiibo'
 import { Message } from './message'
 import { load_locations } from './formatters'
 import { clamp, loadImage } from './util'
@@ -871,8 +872,18 @@ class State {
 
   show_weather_items() {
     const save = this.active_save()
-    const v = new WeatherView(this, new Rect(20, 40, 1280 - 40, 720 - 50), {
+    const v = new WeatherView(this, new Rect(40, 40, 1280 - 60, 720 - 50), {
       save, items: this.details["Weather"]
+    })
+    v.addEventListener('cancel', () => { this.pop_view() })
+    //v.addEventListener('revert', () => { this.update_pouch_items(this.active_save()) })
+    v.addEventListener('write', () => { this.write_active_edits() })
+    this.push_view(v)
+  }
+  show_amiibo_items() {
+    const save = this.active_save()
+    const v = new AmiiboView(this, new Rect(40, 40, 1280 - 60, 720 - 50), {
+      save, items: []
     })
     v.addEventListener('cancel', () => { this.pop_view() })
     //v.addEventListener('revert', () => { this.update_pouch_items(this.active_save()) })
@@ -881,7 +892,7 @@ class State {
   }
 
   show_pouch_items() {
-    const v = new InventoryView(this, new Rect(20, 40, 1280 - 40, 720 - 50), {
+    const v = new InventoryView(this, new Rect(40, 40, 1280 - 60, 720 - 50), {
       save: this.active_save(), items: this.details["Pouch Items"]
     })
     v.addEventListener('cancel', () => { this.pop_view() })
@@ -896,7 +907,9 @@ class State {
       return this.show_pouch_items()
     if (cat == "Weather")
       return this.show_weather_items()
-    const dv = new DetailsView(this, new Rect(40, 40, 1280 - 40, 720 - 50), {
+    if (cat == "Amiibo")
+      return this.show_amiibo_items()
+    const dv = new DetailsView(this, new Rect(40, 40, 1280 - 60, 720 - 50), {
       save: this.active_save(), items: this.details[cat], title: cat
     })
     dv.addEventListener('cancel', (_ev: CustomEvent) => {

@@ -11,6 +11,8 @@ import KoroksUrl from './koroks.json';
 import LocationPosUrl from './locations.json';
 // @ts-ignore
 import NamesUrl from './names.json'
+// @ts-ignore
+import AmiiboUrl from './amiibo_names.json'
 
 function stamina_ui(save_value: number, _data: any) {
   let fifths = Math.round(save_value / 200)
@@ -158,6 +160,7 @@ let Towers: any = {}
 let Koroks: any = {}
 let LocPos: any = {}
 let Names: any = {}
+let Amiibo: any = {}
 
 export async function load_locations() {
   // Locations
@@ -179,6 +182,12 @@ export async function load_locations() {
   }
   // Names
   Names = await read_json(NamesUrl)
+  // Amiibo
+  const raw = await read_json(AmiiboUrl)
+  for (const key of Object.keys(raw)) {
+    const k = key.slice(0, 14)
+    Amiibo[k] = raw[key]
+  }
 }
 
 
@@ -193,6 +202,17 @@ export function tower_pos(id: string) {
   if (tmp in LocPos)
     return LocPos[tmp].pos
   return undefined
+}
+
+
+export function amiibo_ui(amiibo: string[]) {
+  let parts = amiibo.split('_')
+  //let count = parseInt(parts[3])
+  const key1 = parseInt(parts[1]).toString(16).padStart(6, '0') + '00'
+  const key2 = parseInt(parts[2]).toString(16).padStart(4, '0')
+  let key = '0x' + key1 + key2
+  key = Amiibo[key] || key
+  return key
 }
 
 export const UI: { [key: string]: any } = {
@@ -210,6 +230,7 @@ export const UI: { [key: string]: any } = {
   modifier_ui: modifier_ui,
   cook_effect_ui: cook_effect_ui,
   cook_effect1_ui: cook_effect1_ui,
+  amiibo_ui: amiibo_ui,
 }
 
 export function pos_to_map(pos: number[]): number[] {
