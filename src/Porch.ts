@@ -13,6 +13,7 @@ export enum PorchType {
 export function porch_items(ptype: PorchType): string[] {
   // @ts-ignore
   const nums = Object.keys(PorchName).filter(v => Number(v)).filter(v => is_type(v as PorchName, ptype))
+  // @ts-ignore
   return nums.map(v => PorchName[v])
 }
 

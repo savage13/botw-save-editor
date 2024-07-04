@@ -372,8 +372,6 @@ const HidNpadButton_AnyDir =
   HidNpadButton.AnyUp |
   HidNpadButton.AnyDown
 
-const lock = new AsyncLock()
-
 class State {
   ctx_raw: any;
   ctx: any;
@@ -381,17 +379,9 @@ class State {
   canvas: any
   bg_color: string;
   fg_color: string;
-  view: number;
-  cols: any;
-  index: any;
   lock: AsyncLock;
 
   views: View[];
-
-  ACCT: number;
-  FILE: number;
-  CATS: number;
-  DETS: number;
 
   profiles: any;
   saves: any;
@@ -401,21 +391,10 @@ class State {
   current_save_index: number;
   editing: boolean;
   active_edits: any;
-  active_edit_key: string;
-  active_edit_type: string;
   categories: any;
-
-  vkey: any;
 
   constructor() {
     this.lock = new AsyncLock()
-    this.ACCT = 0
-    this.FILE = 1
-    this.CATS = 2
-    this.DETS = 3
-    this.view = 0
-    this.index = [0, 0, 0, 0];
-    this.cols = [4, 4, 4, 4];
 
     this.views = []
 
@@ -430,8 +409,6 @@ class State {
     this.current_nickname = "";
     this.current_save_index = -1;
     this.editing = false;
-    this.active_edit_key = ""
-    this.active_edit_type = ""
     this.active_edits = {};
 
     if (ON_SWITCH) {
@@ -449,7 +426,6 @@ class State {
     this.setup_keys()
     this.clear()
     let font_size = 48;
-    let line_height = font_size * 1.2;
     this.ctx.font = `${font_size}px ${FONT}`
     this.ctx.fillStyle = this.fg_color;
     this.blit()
@@ -474,69 +450,6 @@ class State {
     this.ctx.restore();
   }
 
-  key(value: string, code: any) {
-    if (!this.editing)
-      return
-    if (code == "Backspace") {
-      this.active_edits[this.active_edit_key] = this.active_edits[this.active_edit_key].slice(0, -1)
-    } else {
-      this.active_edits[this.active_edit_key] += value;
-    }
-    //console.log("VALUE", this.active_edits[this.active_edit_key])
-  }
-
-  key_up(max: number = -1, step: number = 1) {
-    const k = this.view;
-    if (max < 0) {
-      this.index[k] -= step;
-      return
-    }
-    let N = this.cols[k] // Columns
-    if (this.index[k] - N >= 0)
-      this.index[k] = clamp(this.index[k] - N, 0, max - 1);
-  }
-  key_down(max: number = -1, step: number = 1) {
-    const k = this.view;
-    if (max < 0) {
-      this.index[k] += step;
-      return
-    }
-    let N = this.cols[k] // Columns
-    if (this.index[k] + N <= max - 1)
-      this.index[k] = clamp(this.index[k] + N, 0, max - 1);
-  }
-  key_left(max: number) {
-    let k = this.view;
-    if (max < 0) {
-      this.index[k] -= 1
-      return
-    }
-    this.index[k] = clamp(this.index[k] - 1, 0, max - 1);
-  }
-  key_right(max: number) {
-    let k = this.view;
-    if (max < 0) {
-      this.index[k] += 1
-      return
-    }
-    this.index[k] = clamp(this.index[k] + 1, 0, max - 1);
-  }
-  key_b(max: number) {
-    let k = this.view;
-    if (k == this.DETS)
-      this.index[k] = 0
-    this.view = clamp(this.view - 1, 0, 3);
-  }
-  key_x(max: number) {
-    if (this.view != this.DETS)
-      return
-    this.write_active_edits();
-  }
-  key_y(max: number) {
-    if (this.view != this.DETS)
-      return
-  }
-
   pop_view() {
     this.views.pop()
     this.update()
@@ -545,93 +458,6 @@ class State {
   push_view(view: View) {
     this.views.push(view)
     this.update()
-  }
-
-  key_a(max: number) {
-    if (this.view == this.DETS) {
-      this.editing_on()
-      return
-    }
-    this.view = clamp(this.view + 1, 0, 3);
-    if (this.view == 3 && this.categories[this.index[this.CATS]] == "Pouch Items") {
-      const save = this.active_save()
-      this.push_view(new InventoryView(this, new Rect(20, 40, 1280 - 40, 720 - 50), {
-        save, items: this.details["Pouch Items"]
-      }))
-    }
-    if (this.view == 3 && this.categories[this.index[this.CATS]] == "Demos") {
-      const save = this.active_save()
-      this.push_view(new DemosView(this, new Rect(20, 40, 1280 - 40, 720 - 50), {
-        save,
-        items: this.details["Demos"],
-        set_value: (key: string, value: boolean) => {
-          this.active_edits[key] = value
-        },
-        get_value: (key: string): any => {
-          if (key in this.active_edits)
-            return this.active_edits[key]
-          return this.active_save().get(key)
-        }
-      }))
-    }
-  }
-  editing_on() {
-    this.editing = true;
-    this.active_edit_type = this.active_detail_type()
-    if (this.active_edit_type == undefined) {
-      //console.log("editing type is", this.active_edit_type)
-      this.editing = false;
-      return
-    }
-    this.active_edit_key = this.active_detail_key()
-    if (!(this.active_edit_key in this.active_edits))
-      this.active_edits[this.active_edit_key] = this.active_detail_value()
-    //console.log("EDIT ON", this.active_edit_key, this.active_edit_type)
-    //navigator.virtualKeyboard.show();
-  }
-  editing_off() {
-    this.editing = false
-    const value = this.active_detail_value()
-    if (value == this.active_edits[this.active_edit_key])
-      delete this.active_edits[this.active_edit_key]
-
-    this.active_edit_key = ""
-    //console.log("EDIT OFF", this.active_edit_key, this.active_edit_type)
-    //navigator.virtualKeyboard.hide();
-  }
-  active_detail() {
-    let name = this.categories[this.index[this.CATS]];
-    let items = this.details[name];
-    return items[this.index[this.DETS]]
-  }
-  active_detail_step() {
-    return this.active_detail().step
-  }
-  active_detail_bigstep() {
-    return this.active_detail().bigstep
-  }
-  active_detail_min() {
-    return this.active_detail().min
-  }
-  active_detail_max() {
-    return this.active_detail().max
-  }
-  active_detail_key() {
-    return this.active_detail().key
-  }
-  active_detail_file() {
-    return this.active_detail().file
-  }
-  active_detail_value() {
-    const save = this.active_save();
-    const key = this.active_detail_key()
-    return save.get(key)
-  }
-
-  active_detail_type() {
-    const save = this.active_save();
-    const key = this.active_detail_key()
-    return save.type(key)
   }
 
   active_save(): any {
@@ -711,8 +537,6 @@ class State {
     }, 1000)
 
   }
-
-
 
   async load_caption_data(nickname: string) {
     await new Promise(async (resolve, _reject) => {
@@ -1026,18 +850,6 @@ class State {
     await this.lock.promise
     this.lock.enable()
 
-    let n = 0;
-    if (this.view == this.ACCT)
-      n = this.profiles.length;
-    if (this.view == this.FILE)
-      n = this.saves.length;
-    if (this.view == this.CATS)
-      n = this.categories.length;
-    if (this.view == this.DETS) {
-      n = -1
-    }
-
-    //console.log("UPDATE", detail, this.editing)
     if (detail == '_REDRAW_')
       true
     if (this.views.length) {
@@ -1083,18 +895,6 @@ class State {
         await top_view.update()
         this.blit()
       }
-      //} else if (this.view == this.ACCT) {
-      //  this.update_accounts();
-      //  this.blit();
-      //} else if (this.view == this.FILE) {
-      //  this.update_captions();
-      //  this.blit();
-      //} else if (this.view == this.CATS) {
-      //await this.update_categories();
-      //this.blit();
-      //} else if (this.view == this.DETS) {
-      //await this.update_details();
-      //this.blit();
     }
     this.lock.disable()
   }
@@ -1111,8 +911,6 @@ class State {
     this.ctx.fill()
     this.ctx.fillStyle = this.fg_color
     this.ctx.strokeStyle = this.fg_color
-    //this.ctx.rect(1280 * , 720 * 0.4, 1280 * 0.33, 720 * 0.2)
-    //this.ctx.stroke()
     this.ctx.fillText(msg, 50, 720 - 35)
     this.ctx.restore()
     //console.log("message", msg)
@@ -1144,10 +942,6 @@ class State {
         clearInterval(INTERVAL_ID);
         BUTTON = BUTTON & (~event.detail) // Clear Bit
       })
-      //addEventListener('keyup', (event: any) => {
-      //  if (this.editing)
-      //    this.key(event.key, event.code)
-      //});
     } else {
       window.addEventListener('keydown', async (event: any) => {
         let detail = undefined

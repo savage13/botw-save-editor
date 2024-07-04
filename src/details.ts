@@ -184,7 +184,7 @@ export class DetailsView extends View {
           let txt = item.txt
           if (item.key == "DifficultyScale") {
             const args = scale_actor(this.data.save.data, this.state.active_edits)
-            txt = txt.replace(/\${(\w+)}/g, (_, v) => args[v])
+            txt = txt.replace(/\${(\w+)}/g, (_: any, v: any) => args[v])
           }
           let lines = txt.split("\n")
           for (let j = 0; j < lines.length; j++) {

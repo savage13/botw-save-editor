@@ -205,7 +205,7 @@ export function tower_pos(id: string) {
 }
 
 
-export function amiibo_ui(amiibo: string[]) {
+export function amiibo_ui(amiibo: string) {
   let parts = amiibo.split('_')
   //let count = parseInt(parts[3])
   const key1 = parseInt(parts[1]).toString(16).padStart(6, '0') + '00'
