@@ -13,6 +13,7 @@ import { DetailsView } from './details'
 import { DemosView } from './demos_view'
 import { WeatherView } from './weather'
 import { AmiiboView } from './amiibo'
+import { QuestView } from './quests'
 import { Message } from './message'
 import { load_locations } from './formatters'
 import { clamp, loadImage } from './util'
@@ -700,7 +701,6 @@ class State {
       save, items: this.details["Weather"]
     })
     v.addEventListener('cancel', () => { this.pop_view() })
-    //v.addEventListener('revert', () => { this.update_pouch_items(this.active_save()) })
     v.addEventListener('write', () => { this.write_active_edits() })
     this.push_view(v)
   }
@@ -710,7 +710,6 @@ class State {
       save, items: []
     })
     v.addEventListener('cancel', () => { this.pop_view() })
-    //v.addEventListener('revert', () => { this.update_pouch_items(this.active_save()) })
     v.addEventListener('write', () => { this.write_active_edits() })
     this.push_view(v)
   }
@@ -724,6 +723,14 @@ class State {
     v.addEventListener('write', () => { this.write_active_edits() })
     this.push_view(v)
   }
+  show_quest_items() {
+    const v = new QuestView(this, new Rect(40, 40, 1280 - 60, 720 - 50), {
+      save: this.active_save(), items: this.details["Quests"]
+    })
+    v.addEventListener('cancel', () => { this.pop_view() })
+    v.addEventListener('write', () => { this.write_active_edits() })
+    this.push_view(v)
+  }
 
   show_detail(index: number) {
     let cat = this.categories[index]
@@ -731,6 +738,8 @@ class State {
       return this.show_pouch_items()
     if (cat == "Weather")
       return this.show_weather_items()
+    if (cat == "Quests")
+      return this.show_quest_items()
     if (cat == "Amiibo")
       return this.show_amiibo_items()
     const dv = new DetailsView(this, new Rect(40, 40, 1280 - 60, 720 - 50), {
