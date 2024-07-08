@@ -4,19 +4,20 @@ import { HidNpadButton } from '@nx.js/constants';
 import { Savefile, load_types, read_json } from './savefile';
 export { Savefile } from './savefile';
 
+import { GamePadState } from './gamepad'
+
 import { View, Rect } from './View'
 import { InventoryView } from './InventoryView'
 import { AccountView } from './accounts'
 import { CaptionView } from './captions'
 import { CategoryView } from './category'
 import { DetailsView } from './details'
-import { DemosView } from './demos_view'
 import { WeatherView } from './weather'
 import { AmiiboView } from './amiibo'
 import { QuestView } from './quests'
 import { Message } from './message'
 import { load_locations } from './formatters'
-import { clamp, loadImage } from './util'
+import { loadImage } from './util'
 import { star } from './draw'
 import { scale_points } from './LevelSensor'
 
@@ -39,6 +40,10 @@ try {
 
 if (!ON_SWITCH) {
   FONT = "Helvetica";
+  import('./fake-gamepad').then((pad) => {
+    pad.gamepadSimulator.create(false)
+    pad.gamepadSimulator.connect()
+  })
 }
 
 const CaptionKeys = {
@@ -859,52 +864,47 @@ class State {
     await this.lock.promise
     this.lock.enable()
 
-    if (detail == '_REDRAW_')
-      true
-    if (this.views.length) {
-      const top_view = this.views.at(-1)
-      if (top_view) {
-        top_view.key(detail)
-      }
+    const top_view = this.views.at(-1)
+    if (!top_view) {
+      this.lock.disable()
+      return
     }
+    if (detail && detail.button)
+      top_view.key(detail.button)
 
-    if (this.views.length) {
-      let top_view = this.views.at(-1)
-      if (top_view) {
-        if (top_view.clear_all())
-          this.clear()
-        let modified = Object.keys(this.active_edits).length
-        let comms = top_view.commands()
-        this.ctx.save()
-        this.ctx.fillStyle = this.bg_color
-        this.ctx.fillRect(200, 0, 1280 - 20, 40)
-        this.ctx.fillStyle = this.fg_color
-        this.ctx.font = `24px ${FONT}`
-        this.ctx.textAlign = "right";
-        this.ctx.textBaseline = "top";
-        let k = 0;
-        for (const [key, val] of Object.entries(comms)) {
-          this.ctx.fillText(`${key}: ${val}`, 1250 - k * 150, 10)
-          k += 1
-        }
-        this.ctx.restore()
-
-        let title = top_view.title()
-        this.ctx.save()
-        this.ctx.fillStyle = this.fg_color
-        this.ctx.font = `36px ${FONT}`
-        this.ctx.textAlign = "left"
-        this.ctx.textBaseline = "top"
-        this.ctx.fillText(title, 40, 10)
-        this.ctx.restore()
-
-        if (modified)
-          star(this.ctx, 20, 25, this.fg_color)
-
-        await top_view.update()
-        this.blit()
-      }
+    if (top_view.clear_all())
+      this.clear()
+    let modified = Object.keys(this.active_edits).length
+    let comms = top_view.commands()
+    this.ctx.save()
+    this.ctx.fillStyle = this.bg_color
+    this.ctx.fillRect(200, 0, 1280 - 20, 40)
+    this.ctx.fillStyle = this.fg_color
+    this.ctx.font = `24px ${FONT}`
+    this.ctx.textAlign = "right";
+    this.ctx.textBaseline = "top";
+    let k = 0;
+    for (const [key, val] of Object.entries(comms)) {
+      this.ctx.fillText(`${key}: ${val}`, 1250 - k * 150, 10)
+      k += 1
     }
+    this.ctx.restore()
+
+    let title = top_view.title()
+    this.ctx.save()
+    this.ctx.fillStyle = this.fg_color
+    this.ctx.font = `36px ${FONT}`
+    this.ctx.textAlign = "left"
+    this.ctx.textBaseline = "top"
+    this.ctx.fillText(title, 40, 10)
+    this.ctx.restore()
+
+    if (modified)
+      star(this.ctx, 20, 25, this.fg_color)
+
+    await top_view.update()
+    this.blit()
+
     this.lock.disable()
   }
   blit() {
@@ -927,55 +927,8 @@ class State {
   }
 
   setup_keys() {
-    if (ON_SWITCH) {
-      const self = this;
-      let BUTTON: HidNpadButton;
-      let INTERVAL_ID: ReturnType<typeof setInterval>;
-      let FACTOR = 0.632120 // 1 - 1/exp(1)
-      function repeat_button_event(detail: number, interval_ms = 400) {
-        if (!BUTTON || BUTTON !== detail)
-          return
-        self.update(detail)
-        interval_ms = Math.max(30, interval_ms * FACTOR)
-        setTimeout(() => { repeat_button_event(detail, interval_ms) }, interval_ms);
-      }
-      addEventListener('buttondown', (event: any) => {
-        clearInterval(INTERVAL_ID);
-        BUTTON = BUTTON | event.detail
-        if ((BUTTON & HidNpadButton.Plus) && BUTTON !== HidNpadButton.Plus)
-          event.preventDefault()
-        this.update(BUTTON)
-        INTERVAL_ID = setTimeout(() => repeat_button_event(BUTTON), 400)
-      })
-      addEventListener('buttonup', (event: any) => {
-        clearInterval(INTERVAL_ID);
-        BUTTON = BUTTON & (~event.detail) // Clear Bit
-      })
-    } else {
-      window.addEventListener('keydown', async (event: any) => {
-        let detail = undefined
-        //console.log(event)
-        if ((event.code in mapping)) {
-          detail = mapping[event.code]
-          if (event.altKey) {
-            detail = detail | mapping.Alt
-          }
-          if (event.shiftKey) {
-            if (event.code + "Shift" in mapping)
-              detail = mapping[event.code + "Shift"]
-          }
-          if (event.key == "+") {
-            detail = HidNpadButton.Plus | HidNpadButton.ZL
-          }
-        }
-        if (this.editing) {
-          if (!detail || !(detail & HidNpadButton_AnyDir))
-            detail = event.key
-        }
-        //console.log("DETAIL", detail)
-        this.update(detail);
-      });
-    }
+    // Only listen for down events, including repeating events
+    window.addEventListener("gamepad_down", (e) => { this.update(e.detail) })
   }
 }
 
@@ -1036,6 +989,8 @@ function create_backup(save_data: any, state: State) {
 }
 
 export async function main() {
+  new GamePadState() // Starts event loop, emits gamepad_up, gamepad_down, runs forever
+
   let state = new State();
   state.clear()
   //console.log(state.ctx)

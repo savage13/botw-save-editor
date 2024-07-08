@@ -202,8 +202,12 @@ export class View extends EventTarget {
       this.selected[ROW] += 1
 
     if (this.selected[COL] >= this.cols) {
-      this.selected[ROW] += 1;
-      this.selected[COL] = 0
+      if (this.selected[ROW] + 1 < this.rows) {
+        this.selected[ROW] += 1;
+        this.selected[COL] = 0
+      } else {
+        this.selected[COL] = this.cols - 1
+      }
     }
     if (this.selected[COL] < 0) {
       if (this.selected[ROW] > 0) {
