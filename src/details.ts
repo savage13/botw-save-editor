@@ -157,8 +157,11 @@ export class DetailsView extends View {
           const ipos = pos_to_map(pos)
           ctx.save()
           ctx.beginPath()
-          ctx.arc(ipos[0], ipos[2], 10, 0, 2 * Math.PI);
-          ctx.fill()
+          ctx.fillStyle = 'white'
+          // Drawing an Arc here tends to crash the switch, so we draw a square
+          //ctx.arc(ipos[0], ipos[2], 10, 0, 2.0 * Math.PI);
+          //ctx.fill()
+          ctx.fillRect(ipos[0] - 5, ipos[2] - 5, 10, 10)
           const xyz = pos.map((v: number) => v.toFixed(2)).join(", ")
           ctx.textAlign = 'left';
           ctx.textBaseline = 'bottom';

@@ -389,6 +389,8 @@ class State {
 
   views: View[];
 
+  queue: any[];
+
   profiles: any;
   saves: any;
   details: any;
@@ -401,7 +403,7 @@ class State {
 
   constructor() {
     this.lock = new AsyncLock()
-
+    this.queue = []
     this.views = []
 
     this.profiles = [];
@@ -860,6 +862,17 @@ class State {
   }
 
   async update(detail: any = "_REDRAW_") {
+    this.queue.push(detail)
+    while (this.queue.length) {
+      const ev = this.queue.shift()
+      if (ev) {
+        await this.update_internal(ev)
+      }
+    }
+  }
+
+  async update_internal(detail: any = "_REDRAW_") {
+
 
     await this.lock.promise
     this.lock.enable()

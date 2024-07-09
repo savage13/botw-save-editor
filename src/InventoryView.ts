@@ -21,8 +21,8 @@ const COL = 1
 function warning(state: any, msg: string) {
   state.push_view(new Message(state, Rect.percent(0.33, 0.33, 0.33, 0.33), {
     msg, title: "", ok_cancel: true,
-    on_confirm: () => { state.views.pop() },
-    on_cancel: () => { state.views.pop() },
+    on_confirm: () => { state.pop_view() },
+    on_cancel: () => { state.pop_view() },
   }))
 }
 
@@ -147,7 +147,6 @@ export class InventoryView extends View {
       })
       this.state.push_view(v)
       return
-
     }
     if (this.edit_kind == "name") {
       const x = 1280 * 0.33
@@ -203,11 +202,15 @@ export class InventoryView extends View {
       return
     }
 
-    //console.log("GET", index, kind, save.pouch_items[index])
-    //return save.pouch_items[index][kind]
     this.editing = !this.editing
-
   }
+
+  update_pouch_items() {
+    this.state.update_pouch_items_details(this.data.save)
+    this.data.items = this.state.details["Pouch Items"]
+    this.rows = this.data.items.length / this.cols
+  }
+
   key_x() { // Writ data to save file
     this.dispatchEvent(new CustomEvent("write"))
   }
@@ -235,8 +238,9 @@ export class InventoryView extends View {
       return
     let item = this.data.save.pouch_items.splice(index, 1) // Remove item
     this.data.save.pouch_items.splice(index - 1, 0, item[0]) // Insert item
-    this.state.update_pouch_items_details(this.data.save)
-    this.data.items = this.state.details["Pouch Items"]
+
+    this.update_pouch_items()
+
     this.key(HidNpadButton.StickRUp)
   }
   key_zl_down() {
@@ -246,12 +250,39 @@ export class InventoryView extends View {
       return
     let item = this.data.save.pouch_items.splice(index, 1) // Remove item
     this.data.save.pouch_items.splice(index + 1, 0, item[0]) // Insert item
-    this.state.update_pouch_items_details(this.data.save)
-    this.data.items = this.state.details["Pouch Items"]
+
+    this.update_pouch_items()
+
     this.key(HidNpadButton.StickRDown)
   }
-  key_zl_minus() {
-    //console.log("ZL MINUS");
+  key_zl_zr() { // Shifts item down in Category
+    let index = this.get_item_index()
+    if (index === undefined)
+      return
+    const new_names: any = {
+      Weapon: 'Weapon_Sword_044',
+      Bow: 'Weapon_Bow_001',
+      Shield: 'Weapon_Shield_040',
+      Arrow: 'NormalArrow',
+      Armor: 'Armor_001_Head',
+      Food: 'Item_Boiled_01',
+      Material: 'Item_Ore_I',
+      KeyItem: 'Obj_DungeonClearSeal',
+    }
+    const new_names_order = ['Weapon', 'Bow', 'Shield', 'Arrow', 'Armor', 'Food', 'Material', 'KeyItem']
+    let new_item = new PorchItem()
+
+    const value = this.data.save.pouch_items[index]
+    let pt = value.ptype // Pouch Type
+    let pt_next = (new_names_order.findIndex((v) => v == pt) + 1) % new_names_order.length
+    new_item.name = new_names[new_names_order[pt_next]]
+    this.data.save.pouch_items.splice(index, 1, new_item)
+
+    this.update_pouch_items()
+
+    return "preventDefault"
+  }
+  key_l() { // DELETE
     let index = this.get_item_index()
     if (index === undefined)
       return
@@ -259,10 +290,10 @@ export class InventoryView extends View {
     if (index >= 0 && index <= n) {
       this.data.save.pouch_items.splice(index, 1)
     }
-    this.state.update_pouch_items_details(this.data.save)
-    this.data.items = this.state.details["Pouch Items"]
+
+    this.update_pouch_items()
   }
-  key_zl_plus(): any {
+  key_r(): any { // ADD
     const MAX: { [key: string]: number } = {
       Total: 420,
       Weapon: 20,
@@ -329,8 +360,8 @@ export class InventoryView extends View {
       }
       this.data.save.pouch_items.splice(index, 0, new_item)
     }
-    this.state.update_pouch_items_details(this.data.save)
-    this.data.items = this.state.details["Pouch Items"]
+    this.update_pouch_items()
+
     return "preventDefault"
   }
 
@@ -388,7 +419,7 @@ export class InventoryView extends View {
   commands(): any {
     return {
       X: "Write", B: "Back", A: "Select", Y: "Revert",
-      ZL: "Move", "ZL-": "Del", "ZL+": "Add",
+      ZL: "Move", R: "Add", L: "Del",
     }
   }
 

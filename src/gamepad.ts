@@ -14,7 +14,7 @@ export class GamePadState {
     this.delta = 0
     this.last = 0
     this.hold_interval = 150 // First repeat is 150 ms, guessed at these numbers
-    this.event_interval = 40 // Repeated events are 30 ms
+    this.event_interval = 32 // Repeated events are 30 ms 
     window.requestAnimationFrame(() => { this.input_loop() });
   }
 
@@ -22,9 +22,9 @@ export class GamePadState {
     const pads = navigator.getGamepads();
     if (!pads[0])
       return
+    window.requestAnimationFrame(() => { this.input_loop() });
     const button = gamepad_to_HidNpadButton(pads[0])
     this.press(button, pads[0].axes)
-    window.requestAnimationFrame(() => { this.input_loop() });
   }
 
   event(event_name: string, change: HidNpadButton, repeat: boolean, axes: readonly number[]) {
@@ -44,7 +44,7 @@ export class GamePadState {
     const down = (change & button) != 0
     this.time = new Date().valueOf()
     this.delta = 0
-    this.last = 0
+    this.last = this.time
     this.button = button
 
     if (this.button == 0)
@@ -60,6 +60,7 @@ export class GamePadState {
     const since_last_event = t - this.last
     if (count <= 0 || since_last_event < this.event_interval)
       return
+    this.last = t
     this.event("gamepad_down", change, true, axes)
   }
 

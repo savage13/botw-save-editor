@@ -140,6 +140,7 @@ export class View extends EventTarget {
   key_zl_left() { }
   key_zl_minus() { }
   key_zl_plus() { }
+  key_zl_zr() { }
   key_zl() { }
   key_zr() { }
 
@@ -156,6 +157,8 @@ export class View extends EventTarget {
       return this.key_zl_left()
     if (detail & HidNpadButton.ZL && detail & HidNpadButton.AnyRight)
       return this.key_zl_right()
+    if (detail & HidNpadButton.ZL && detail & HidNpadButton.ZR)
+      return this.key_zl_zr()
     if (detail & HidNpadButton.ZL && detail & HidNpadButton.Minus)
       return this.key_zl_minus()
     if (detail & HidNpadButton.ZL && detail & HidNpadButton.Plus)
