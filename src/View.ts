@@ -140,6 +140,7 @@ export class View extends EventTarget {
   key_zl_left() { }
   key_zl_minus() { }
   key_zl_plus() { }
+  key_zl_zr() { }
   key_zl() { }
   key_zr() { }
 
@@ -156,6 +157,8 @@ export class View extends EventTarget {
       return this.key_zl_left()
     if (detail & HidNpadButton.ZL && detail & HidNpadButton.AnyRight)
       return this.key_zl_right()
+    if (detail & HidNpadButton.ZL && detail & HidNpadButton.ZR)
+      return this.key_zl_zr()
     if (detail & HidNpadButton.ZL && detail & HidNpadButton.Minus)
       return this.key_zl_minus()
     if (detail & HidNpadButton.ZL && detail & HidNpadButton.Plus)
@@ -202,8 +205,12 @@ export class View extends EventTarget {
       this.selected[ROW] += 1
 
     if (this.selected[COL] >= this.cols) {
-      this.selected[ROW] += 1;
-      this.selected[COL] = 0
+      if (this.selected[ROW] + 1 < this.rows) {
+        this.selected[ROW] += 1;
+        this.selected[COL] = 0
+      } else {
+        this.selected[COL] = this.cols - 1
+      }
     }
     if (this.selected[COL] < 0) {
       if (this.selected[ROW] > 0) {
@@ -237,6 +244,6 @@ export class View extends EventTarget {
       offset = (this.selected[ROW] - Math.floor(this.nlines / 2)) * this.cols
     return offset
   }
-  async update() {
+  update() {
   }
 }

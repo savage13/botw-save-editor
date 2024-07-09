@@ -53,7 +53,7 @@ export class QuestView extends View {
     return key in this.state.active_edits
   }
 
-  async update() {
+  update() {
     const ctx = this.get_ctx();
     this.clear()
     ctx.save()

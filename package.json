@@ -13,17 +13,17 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@nx.js/nro": "^0.0.46",
-    "@nx.js/nsp": "^0.0.46",
-    "esbuild": "^0.17.19",
-    "nxjs-runtime": "^0.0.46"
+    "@nx.js/nro": "^0.0.48",
+    "@nx.js/nsp": "^0.0.48",
+    "esbuild": "^0.23.0",
+    "nxjs-runtime": "^0.0.48"
   },
   "author": {
     "name": "savage13",
     "email": "savage13@gmail.com"
   },
   "dependencies": {
-    "@nx.js/constants": "^0.1.2",
+    "@nx.js/constants": "^0.1.4",
     "@types/node": "^20.14.2"
   }
 }

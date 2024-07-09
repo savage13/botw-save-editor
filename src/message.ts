@@ -34,7 +34,7 @@ export class Message extends View {
     return { '+': 'Quit Editor' }
   }
 
-  async update() {
+  update() {
     const ctx = this.get_ctx()
     this.clear()
 

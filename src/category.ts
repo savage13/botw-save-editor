@@ -62,7 +62,7 @@ export class CategoryView extends View {
     ctx.restore()
   }
 
-  async update() {
+  update() {
     const index = this.selected_index()
     const n = this.data.items.length
     if (index >= n) {
