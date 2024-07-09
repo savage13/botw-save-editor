@@ -28,6 +28,13 @@ export class DetailsView extends View {
     this.rows = this.data.items.length
     this.calc_nlines()
     this.set_widths([0.50 * this.rect.w])
+    this.load_image()
+  }
+
+  async load_image() {
+    if (MapImage === undefined) {
+      MapImage = await loadImageFile(MapUrl)
+    }
   }
 
   title(): string { return this.data.title || "Details" }
@@ -92,10 +99,7 @@ export class DetailsView extends View {
     return this.data.save.get(key)
   }
 
-  async update() {
-    if (MapImage === undefined) {
-      MapImage = await loadImageFile(MapUrl)
-    }
+  update() {
     const ctx = this.get_ctx()
     ctx.save()
     ctx.fillStyle = this.fg_color
@@ -148,7 +152,7 @@ export class DetailsView extends View {
         ctx.fillText(fmt(value), p.x + w_name, p.y + 0.1 * this.font_size)
 
       if (p.row == this.selected[ROW]) {
-        if (this.data.title != "Defeated Enemies")
+        if (this.data.title != "Defeated Enemies" && MapImage)
           ctx.drawImage(MapImage, 1280 - 600, 720 - 500)
         let pos = tower_pos(item.name)
         if (item.key.startsWith("PlayerSavePos"))
@@ -158,10 +162,8 @@ export class DetailsView extends View {
           ctx.save()
           ctx.beginPath()
           ctx.fillStyle = 'white'
-          // Drawing an Arc here tends to crash the switch, so we draw a square
-          //ctx.arc(ipos[0], ipos[2], 10, 0, 2.0 * Math.PI);
-          //ctx.fill()
-          ctx.fillRect(ipos[0] - 5, ipos[2] - 5, 10, 10)
+          ctx.arc(ipos[0], ipos[2], 10, 0, 2.0 * Math.PI);
+          ctx.fill()
           const xyz = pos.map((v: number) => v.toFixed(2)).join(", ")
           ctx.textAlign = 'left';
           ctx.textBaseline = 'bottom';

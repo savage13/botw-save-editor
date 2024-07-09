@@ -91,8 +91,16 @@ export class WeatherView extends View {
     this.calc_nlines()
     const w = 0.04
     this.set_widths([0.3, w, w, w, w, w, w].map(v => v * this.rect.w))
-
+    this.load_image()
   }
+
+  async load_image() {
+    if (MapImage == undefined)
+      MapImage = await loadImageFile(MapUrl)
+    if (Regions == undefined)
+      Regions = await read_json(RegionsUrl)
+  }
+
   key_r() {
     if (this.selected[COL] == 0)
       return
@@ -227,11 +235,7 @@ export class WeatherView extends View {
     return days
   }
 
-  async update() {
-    if (MapImage == undefined)
-      MapImage = await loadImageFile(MapUrl)
-    if (Regions == undefined)
-      Regions = await read_json(RegionsUrl)
+  update() {
 
     let cw = this.cw[this.day]
 
@@ -275,29 +279,31 @@ export class WeatherView extends View {
     }
 
     // Map and Selected Climate Region
-    ctx.drawImage(MapImage, 1280 - 600, 720 - 500)
+    if (MapImage)
+      ctx.drawImage(MapImage, 1280 - 600, 720 - 500)
 
     const name = this.climates_keys[this.selected[ROW]]
     ctx.fillStyle = 'rgba(255,168,0,0.5)'
-    const polys = Regions[name]
-    ctx.beginPath()
-    for (const rings of polys) {
-      for (const ring of rings) {
-        for (const pts of ring) {
-          for (let i = 0; i < pts.length; i++) {
-            const pt = [pts[i][0], 0, pts[i][1]]
-            const p = pos_to_map(pt)
-            if (i == 0)
-              ctx.moveTo(p[0], p[2])
-            else
-              ctx.lineTo(p[0], p[2])
+    if (Regions) {
+      const polys = Regions[name]
+      ctx.beginPath()
+      for (const rings of polys) {
+        for (const ring of rings) {
+          for (const pts of ring) {
+            for (let i = 0; i < pts.length; i++) {
+              const pt = [pts[i][0], 0, pts[i][1]]
+              const p = pos_to_map(pt)
+              if (i == 0)
+                ctx.moveTo(p[0], p[2])
+              else
+                ctx.lineTo(p[0], p[2])
+            }
+            ctx.closePath()
           }
-          ctx.closePath()
         }
       }
-
+      ctx.fill()
     }
-    ctx.fill()
 
     const x = 1280 - 600 + 100
     let y = this.rect.y + 20

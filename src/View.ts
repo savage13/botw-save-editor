@@ -244,6 +244,6 @@ export class View extends EventTarget {
       offset = (this.selected[ROW] - Math.floor(this.nlines / 2)) * this.cols
     return offset
   }
-  async update() {
+  update() {
   }
 }

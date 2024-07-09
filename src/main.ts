@@ -887,6 +887,7 @@ class State {
 
     if (top_view.clear_all())
       this.clear()
+
     let modified = Object.keys(this.active_edits).length
     let comms = top_view.commands()
     this.ctx.save()
@@ -915,7 +916,7 @@ class State {
     if (modified)
       star(this.ctx, 20, 25, this.fg_color)
 
-    await top_view.update()
+    top_view.update()
     this.blit()
 
     this.lock.disable()

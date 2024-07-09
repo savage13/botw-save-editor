@@ -44,7 +44,7 @@ export class AccountView extends View {
 
   commands(): any { return { A: "Select" } }
 
-  async update() {
+  update() {
     const index = this.selected_index()
     const n = this.data.profiles.length
     if (index >= n) {

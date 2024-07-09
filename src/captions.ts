@@ -62,7 +62,7 @@ export class CaptionView extends View {
 
   title(): string { return "Save Files" }
 
-  async update() {
+  update() {
     const ctx = this.get_ctx()
 
     ctx.save()

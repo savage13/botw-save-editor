@@ -431,7 +431,7 @@ export class InventoryView extends View {
   // ZL + Add item from list, Pick default Item to add
   //      Based on value above or below
 
-  async update() {
+  update() {
     const ctx = this.get_ctx()
     const items = this.data.items;
     //const save = this.data.save;

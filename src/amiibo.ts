@@ -39,7 +39,7 @@ export class AmiiboView extends View {
     return this.data.save.data.get(key)
   }
 
-  async update() {
+  update() {
     const ctx = this.get_ctx();
     this.clear()
     ctx.save()

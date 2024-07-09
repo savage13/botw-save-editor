@@ -36,7 +36,7 @@ export class DemosView extends View {
   }
 
 
-  async update() {
+  update() {
     const ctx = this.get_ctx()
     const items = this.data.items;
     this.clear()

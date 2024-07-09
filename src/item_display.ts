@@ -77,7 +77,7 @@ export class ItemDisplay2View extends View {
 
   commands(): any { return { a: "Ok", dir: "Select" } }
 
-  async update() {
+  update() {
     const x0 = this.rect.x
     const y0 = this.rect.y
     const w0 = this.rect.w
@@ -172,7 +172,7 @@ export class ItemDialogView extends View {
   is_checked(key: string) {
     return this.data.is_checked(key)
   }
-  async update() {
+  update() {
     const x0 = this.rect.x
     const y0 = this.rect.y
     const w0 = this.rect.w
